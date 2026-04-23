@@ -1,0 +1,124 @@
+/* 🌙 DARK PURPLE THEME (FINAL CLEAN VERSION) */
+
+body.dark-mode {
+  background: linear-gradient(135deg, #2b1320, #3a1c2c);
+  color: #f8d6ec;
+}
+
+/* GLOBAL TEXT FIX */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode label {
+  color: #f8d6ec !important;
+}
+
+/* NAVBAR */
+body.dark-mode .navbar,
+body.dark-mode nav {
+  background: #2a1a24 !important;
+}
+
+body.dark-mode .navbar a,
+body.dark-mode nav a {
+  color: #ffb3d9 !important;
+}
+
+body.dark-mode nav a:hover {
+  color: #ff66b2 !important;
+}
+
+/* CARDS */
+body.dark-mode .card,
+body.dark-mode .developer-card,
+body.dark-mode .profile-card,
+body.dark-mode .form-card,
+body.dark-mode .info-card {
+  background: #3a2430 !important;
+  color: #fff;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+}
+
+/* INPUTS */
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background: #2a1f26 !important;
+  color: #fff !important;
+  border: 1px solid #555;
+}
+
+/* PLACEHOLDER */
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #aaa;
+}
+
+/* BUTTONS */
+body.dark-mode button,
+body.dark-mode .primary-btn,
+body.dark-mode .send-btn {
+  background: linear-gradient(135deg, #8b1e5a, #c21875);
+  color: white;
+}
+
+/* TABLE */
+body.dark-mode table {
+  background: #2a1f26;
+  color: white;
+}
+
+body.dark-mode th {
+  background: #3a2430;
+}
+
+body.dark-mode td {
+  border-color: #555;
+}
+
+/* SPECIFIC PAGE FIXES */
+
+/* ABOUT PAGE */
+body.dark-mode .about-container {
+  background: transparent !important;
+}
+
+body.dark-mode .developer-card h3 {
+  color: #ff8ecf !important;
+}
+
+/* CONTACT PAGE */
+body.dark-mode .contact-page {
+  background: transparent !important;
+}
+
+body.dark-mode .page-title {
+  color: #ff8ecf !important;
+}
+
+body.dark-mode .subtitle {
+  color: #d9a6c3 !important;
+}
+
+/* HOME CARDS FIX */
+body.dark-mode .card h3 {
+  color: #ff8ecf !important;
+}
+
+/* LOGIN FIX */
+body.dark-mode .login-container {
+  background: #2a1f26;
+  color: white;
+}
+
+body.dark-mode .right-panel {
+  background: #2a1821;
+}
+
+/* LINKS */
+body.dark-mode a {
+  color: #ff8ecf;
+}

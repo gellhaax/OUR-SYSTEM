@@ -1,0 +1,79 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffd6ec;
+  padding: 0 40px;   
+  height: 70px;      
+  font-family: Cambria;
+  font-weight: bold;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  font-size: 20px;
+  color: #c2185b;
+}
+
+.logo img {
+  width: auto;   
+  height: 80px;
+  object-fit: contain;
+}
+
+.nav-links a{
+margin:0 15px;
+text-decoration:none;
+color:#c2185b;
+font-weight:bold;
+}
+
+.nav-links a:hover{
+text-decoration:underline;
+}
+/* Remove default list styles */
+nav ul {
+  list-style: none;
+  display: flex;       /* horizontal */
+  gap: 20px;
+  background-color: #de0e4c;
+  padding: 10px 20px;
+  margin: 0;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+  padding: 5px 10px;
+}
+
+nav ul li a:hover {
+  background-color: #cf68ad;
+  border-radius: 5px;
+}
+.role {
+  background: #c2185b;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 13px;
+}
+/* DARK MODE NAVBAR */
+body.dark-mode nav,
+body.dark-mode .navbar {
+  background: #2a1f26 !important;
+  color: #fff;
+}
+
+/* links */
+body.dark-mode nav a,
+body.dark-mode .navbar a {
+  color: #f5d6d6 !important;
+}
+
+
+body.dark-mode nav a:hover {
+  color: #ff9aa2 !important;
+}

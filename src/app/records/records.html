@@ -1,0 +1,257 @@
+<div class="page">
+
+  <h1 class="title">PAYMENT RECORDS</h1>
+
+  <div class="top-bar">
+    <input type="text"
+           placeholder="🔎 Search Student..."
+           [(ngModel)]="searchId"
+           (input)="searchStudent()">
+
+    <button class="add-btn" (click)="openAddForm()">+ Add Student</button>
+  </div>
+
+  <div class="content">
+
+    <!-- LEFT -->
+    <div class="left">
+
+      <!-- STUDENT INFORMATION -->
+      <div *ngIf="filteredRecords.length; else empty" class="card">
+        <h3>👤 STUDENT INFORMATION</h3>
+
+        <p><b>ID:</b> {{ filteredRecords[0].studentId }}</p>
+        <p><b>Name:</b> {{ filteredRecords[0].name }}</p>
+        <p><b>Course:</b> {{ filteredRecords[0].course }}</p>
+        <p><b>Year:</b> {{ filteredRecords[0].year }}</p>
+
+        <button class="add-btn" (click)="openTransactionForm()">
+          + Add Another Transaction
+        </button>
+
+        <!-- EDIT BUTTON MOVED HERE -->
+        <button class="add-btn" style="margin-top:10px; background:#444;"
+                (click)="editRecord(filteredRecords[0], 0)">
+          ✏️ Edit Student Info
+        </button>
+      </div>
+
+      <!-- ADD TRANSACTION -->
+      <div class="right card" *ngIf="showTransactionForm">
+
+        <h3>Add Transaction</h3>
+
+        <label>Fee</label>
+        <select [(ngModel)]="newTransaction.fee"
+                (change)="computeBalance(newTransaction)">
+          <option>Organization fee</option>
+          <option>Usg Fee</option>
+          <option>Miscellaneous fee</option>
+          <option>Tuition fee</option>
+        </select>
+
+        <label>Amount</label>
+        <input type="number"
+               [(ngModel)]="newTransaction.amount"
+               (input)="computeBalance(newTransaction)">
+
+        <label>Balance</label>
+        <input [value]="newTransaction.balance" readonly>
+
+        <label>Status</label>
+        <input [value]="newTransaction.status" readonly>
+
+        <label>Payment Method</label>
+        <select [(ngModel)]="newTransaction.method">
+          <option>Cash</option>
+          <option>GCash</option>
+        </select>
+
+        <label>Date</label>
+        <input type="date" [(ngModel)]="newTransaction.date">
+
+        <label>Receipt</label>
+        <input type="file" (change)="onFileSelected($event, newTransaction)">
+
+        <button (click)="addTransaction()">Save</button>
+        <button (click)="closeTransactionForm()">Cancel</button>
+
+      </div>
+
+      <!-- EMPTY -->
+      <ng-template #empty>
+        <div class="card" *ngIf="!searchId">
+          Search a student to view details.
+        </div>
+      </ng-template>
+
+      <!-- STUDENT LIST -->
+      <div class="card" *ngIf="!searchId">
+        <h3>📃 STUDENT LIST</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>STUDENT ID</th>
+              <th>NAME</th>
+              <th>COURSE</th>
+              <th>YEAR</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let r of records; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ r.studentId }}</td>
+              <td>{{ r.name }}</td>
+              <td>{{ r.course }}</td>
+              <td>{{ r.year }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- NO RESULTS -->
+      <div class="card" *ngIf="searchId && !filteredRecords.length">
+        No results found.
+      </div>
+
+      <!-- PAYMENT HISTORY (NO EDIT, ONLY DELETE) -->
+      <div class="card">
+        <h3>⏲ PAYMENT HISTORY</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Fee</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Receipt</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let r of filteredRecords; let i = index">
+              <td>{{ i+1 }}</td>
+              <td>{{ r.date }}</td>
+              <td>{{ r.fee }}</td>
+              <td>{{ r.amount }}</td>
+              <td>{{ r.method }}</td>
+              <td>
+                <span [ngClass]="r.status==='Paid'?'paid':'partial'">
+                  {{ r.status }}
+                </span>
+              </td>
+              <td>
+                <a *ngIf="r.receipt" [href]="r.receipt" target="_blank">View</a>
+                <span *ngIf="!r.receipt">No File</span>
+              </td>
+              <td>
+                <button (click)="confirmDelete(i)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- RIGHT FORMS -->
+    <div class="right card" *ngIf="showAddForm">
+
+      <h3>Add Student</h3>
+
+      <input placeholder="Student ID"
+             [(ngModel)]="newRecord.studentId"
+             maxlength="10"
+             (input)="newRecord.studentId=newRecord.studentId.replace(/[^0-9]/g,'')">
+
+      <input placeholder="Name"
+             [(ngModel)]="newRecord.name"
+             (input)="newRecord.name=newRecord.name.replace(/[^A-Za-z\s]/g,'')">
+
+      <label>Course</label>
+      <select [(ngModel)]="newRecord.course">
+        <option>BSIT</option>
+        <option>BSTCM</option>
+        <option>BSEMT</option>
+      </select>
+
+      <label>Year</label>
+      <select [(ngModel)]="newRecord.year">
+        <option>1st</option>
+        <option>2nd</option>
+        <option>3rd</option>
+        <option>4th</option>
+      </select>
+
+      <label>Fee</label>
+      <select [(ngModel)]="newRecord.fee" (change)="computeBalance(newRecord)">
+        <option>Organization fee</option>
+        <option>Usg Fee</option>
+        <option>Miscellaneous fee</option>
+        <option>Tuition fee</option>
+      </select>
+
+      <label>Amount</label>
+      <input type="number"
+             [(ngModel)]="newRecord.amount"
+             (input)="computeBalance(newRecord)">
+
+      <label>Balance</label>
+      <input [value]="newRecord.balance" readonly>
+      <input [value]="newRecord.status" readonly>
+
+      <label>Payment Method</label>
+      <select [(ngModel)]="newRecord.method">
+        <option>Cash</option>
+        <option>GCash</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" [(ngModel)]="newRecord.date">
+
+      <label>Add Receipt</label>
+      <input type="file" (change)="onFileSelected($event, newRecord)">
+
+      <button (click)="addRecord()">Save</button>
+      <button class="cancel-btn" (click)="closeAddForm()">Cancel</button>
+
+    </div>
+
+    <!-- EDIT MODAL (NOW STUDENT INFO EDIT ONLY) -->
+    <div *ngIf="selectedRecord" class="edit-modal">
+      <div class="edit-box">
+
+        <h3>Edit Student Information</h3>
+
+        <input [(ngModel)]="selectedRecord.studentId" placeholder="Student ID">
+
+        <input [(ngModel)]="selectedRecord.name" placeholder="Name">
+
+        <select [(ngModel)]="selectedRecord.course">
+          <option>BSIT</option>
+          <option>BSTCM</option>
+          <option>BSEMT</option>
+        </select>
+
+        <select [(ngModel)]="selectedRecord.year">
+          <option>1st</option>
+          <option>2nd</option>
+          <option>3rd</option>
+          <option>4th</option>
+        </select>
+
+        <button (click)="saveEdit()">Save</button>
+        <button (click)="cancelEdit()">Cancel</button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
