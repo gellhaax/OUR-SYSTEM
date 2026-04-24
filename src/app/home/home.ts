@@ -12,25 +12,58 @@ export class Home implements OnInit {
 
   records: any[] = [];
 
-  ngOnInit() {
+ ngOnInit() {
+  this.loadData();
+
+  window.addEventListener('storage', () => {
+    this.loadData();
+  });
+}
+loadData() {
     const data = localStorage.getItem('records');
     this.records = data ? JSON.parse(data) : [];
   }
 
+  // ✅ TOTAL CASH
   get totalCash(): number {
-    return this.records
-      .filter(r => r.method === 'Cash')
-      .reduce((sum, r) => sum + Number(r.amount), 0);
+    let total = 0;
+
+    this.records.forEach(student => {
+      (student.transactions || []).forEach((t: any) => {
+        if (t.method === 'Cash') {
+          total += Number(t.amount || 0);
+        }
+      });
+    });
+
+    return total;
   }
 
+  // ✅ TOTAL GCASH
   get totalGCash(): number {
-    return this.records
-      .filter(r => r.method === 'GCash')
-      .reduce((sum, r) => sum + Number(r.amount), 0);
+    let total = 0;
+
+    this.records.forEach(student => {
+      (student.transactions || []).forEach((t: any) => {
+        if (t.method === 'GCash') {
+          total += Number(t.amount || 0);
+        }
+      });
+    });
+
+    return total;
   }
 
+  // ✅ TOTAL PAYMENTS
   get totalPayment(): number {
-    return this.records
-      .reduce((sum, r) => sum + Number(r.amount), 0);
+    let total = 0;
+
+    this.records.forEach(student => {
+      (student.transactions || []).forEach((t: any) => {
+        total += Number(t.amount || 0);
+      });
+    });
+
+    return total;
   }
 }

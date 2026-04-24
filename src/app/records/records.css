@@ -75,6 +75,7 @@ body {
   transition: 0.3s;
 }
 
+
 .card:hover {
   transform: translateY(-2px);
 }
@@ -177,4 +178,30 @@ tr:hover {
   text-align: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   font-weight: 600;
+}
+
+.paid {
+  background: #1f7a3a;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.partial {
+  background: #b57f00;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+tr:hover {
+  background: #5c2f41 !important;
+  color: #ffffff !important;
+}
+
+tr:hover td {
+  color: #ffffff !important;
 }

@@ -31,16 +31,39 @@ export class Records implements OnInit {
   newRecord: any = this.getEmptyRecord();
   newTransaction: any = this.getEmptyTransaction();
 
+  // =========================
+  // INIT
+  // =========================
   ngOnInit() {
     const data = localStorage.getItem('records');
     this.records = data ? JSON.parse(data) : [];
-    this.filteredRecords = [];
+
+    // 🔥 MIGRATE OLD DATA (name → first/middle/last)
+    this.records = this.records.map((r: any) => {
+      if (!r.firstName && r.name) {
+        const parts = r.name.split(' ');
+        return {
+          ...r,
+          firstName: parts[0] || '',
+          middleName: parts[1] || '',
+          lastName: parts.slice(2).join(' ') || ''
+        };
+      }
+      return r;
+    });
+
+    this.saveToStorage();
   }
 
+  // =========================
+  // MODELS
+  // =========================
   getEmptyRecord() {
     return {
       studentId: '',
-      name: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
       course: '',
       year: '',
       fee: '',
@@ -65,11 +88,147 @@ export class Records implements OnInit {
     };
   }
 
+  // =========================
+  // STORAGE
+  // =========================
   saveToStorage() {
     localStorage.setItem('records', JSON.stringify(this.records));
   }
 
+  // =========================
+  // COMPUTE BALANCE
+  // =========================
+  computeBalance(record: any) {
+    const fee = this.feeMap[record.fee] || 0;
+
+    let paid = Number(record.amount || 0);
+    if (paid < 0) paid = 0;
+    if (paid > fee) paid = fee;
+
+    record.amount = paid;
+    record.balance = fee - paid;
+    record.status = record.balance === 0 ? 'Paid' : 'Partial';
+  }
+
+  // =========================
+  // FILE UPLOAD
+  // =========================
+  onFileSelected(event: any, target: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => target.receipt = reader.result as string;
+    reader.readAsDataURL(file);
+  }
+
+  // =========================
+  // SEARCH STUDENT
+  // =========================
+  searchStudent() {
+  const key = this.searchId.trim();
+
+  if (!key) {
+    this.filteredRecords = [];
+    return;
+  }
+
+  this.filteredRecords = this.records.filter(r =>
+    r.studentId.includes(key)
+  );
+}
+
+  // =========================
+  // ADD STUDENT
+  // =========================
+  addRecord() {
+
+    if (!this.newRecord.firstName?.trim()) {
+      alert("First Name is required!");
+      return;
+    }
+
+    if (!this.newRecord.lastName?.trim()) {
+      alert("Last Name is required!");
+      return;
+    }
+
+    if (!this.newRecord.studentId) {
+      alert("Student ID is required!");
+      return;
+    }
+
+    // 🔥 SAFE DUPLICATE CHECK (ONLY ID)
+    const existing = this.records.find(r =>
+      r.studentId === this.newRecord.studentId
+    );
+
+    if (existing) {
+      alert("Student already exists!");
+      return;
+    }
+
+    this.computeBalance(this.newRecord);
+
+    const student = {
+      studentId: this.newRecord.studentId,
+      firstName: this.newRecord.firstName,
+      middleName: this.newRecord.middleName,
+      lastName: this.newRecord.lastName,
+      course: this.newRecord.course,
+      year: this.newRecord.year,
+      transactions: [
+        {
+          fee: this.newRecord.fee,
+          amount: this.newRecord.amount,
+          method: this.newRecord.method,
+          balance: this.newRecord.balance,
+          status: this.newRecord.status,
+          date: this.newRecord.date,
+          receipt: this.newRecord.receipt
+        }
+      ]
+    };
+
+    this.records.push(student);
+    this.saveToStorage();
+
+    window.dispatchEvent(new Event('storage'));
+
+    this.closeAddForm();
+  }
+
+  // =========================
+  // TRANSACTION
+  // =========================
+  addTransaction() {
+    const student = this.filteredRecords[0];
+    if (!student) return;
+
+    this.computeBalance(this.newTransaction);
+
+    student.transactions.push({ ...this.newTransaction });
+
+    this.saveToStorage();
+    window.dispatchEvent(new Event('storage'));
+
+    this.closeTransactionForm();
+    this.searchStudent();
+  }
+
+  deleteTransaction(index: number) {
+    const student = this.filteredRecords[0];
+    if (!student || !student.transactions) return;
+
+    student.transactions.splice(index, 1);
+
+    this.saveToStorage();
+    window.dispatchEvent(new Event('storage'));
+  }
+
+  // =========================
   // FORMS
+  // =========================
   openAddForm() {
     this.showAddForm = true;
     this.showTransactionForm = false;
@@ -96,118 +255,24 @@ export class Records implements OnInit {
     this.newTransaction = this.getEmptyTransaction();
   }
 
-  // LOGIC
-  computeBalance(record: any) {
-    const fee = this.feeMap[record.fee] || 0;
-
-    let paid = Number(record.amount || 0);
-    if (paid < 0) paid = 0;
-    if (paid > fee) paid = fee;
-
-    record.amount = paid;
-    record.balance = fee - paid;
-    record.status = record.balance === 0 ? 'Paid' : 'Partial';
-  }
-
-  onFileSelected(event: any, target: any) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => target.receipt = reader.result as string;
-    reader.readAsDataURL(file);
-  }
-
-  findStudent(studentId: string, name: string) {
-    return this.records.find(r =>
-      r.studentId === studentId ||
-      r.name.toLowerCase() === name.toLowerCase()
-    );
-  }
-
-  // ADD STUDENT
-  addRecord() {
-    const existing = this.findStudent(
-      this.newRecord.studentId,
-      this.newRecord.name
-    );
-
-    if (existing) {
-      alert("Student already exists!");
-      return;
-    }
-
-    this.computeBalance(this.newRecord);
-
-    this.records = [...this.records, { ...this.newRecord }];
-    this.saveToStorage();
-
-    this.closeAddForm();
-    this.searchId = '';
-    this.filteredRecords = [];
-  }
-
-  // ADD TRANSACTION
-  addTransaction() {
-
-    const student = this.filteredRecords[0];
-
-    const newEntry = {
-      studentId: student.studentId,
-      name: student.name,
-      course: student.course,
-      year: student.year,
-      ...this.newTransaction
-    };
-
-    this.computeBalance(newEntry);
-
-    this.records = [...this.records, newEntry];
-    this.saveToStorage();
-
-    this.closeTransactionForm();
-    this.searchId = '';
-    this.filteredRecords = [];
-  }
-
-  // SEARCH
-  searchStudent() {
-    const key = this.searchId.trim().toLowerCase();
-
-    if (!key) {
-      this.filteredRecords = [];
-      return;
-    }
-
-    this.filteredRecords = this.records.filter(r =>
-      r.studentId.includes(key) ||
-      r.name.toLowerCase().includes(key)
-    );
-  }
-
-  // EDIT / DELETE
+  // =========================
+  // EDIT
+  // =========================
   editRecord(record: any, index: number) {
     this.selectedRecord = { ...record };
     this.selectedIndex = index;
   }
 
   saveEdit() {
-    this.computeBalance(this.selectedRecord);
     this.records[this.selectedIndex] = this.selectedRecord;
+
     this.saveToStorage();
+    window.dispatchEvent(new Event('storage'));
+
     this.selectedRecord = null;
   }
 
   cancelEdit() {
     this.selectedRecord = null;
-  }
-
-  confirmDelete(index: number) {
-    if (confirm("Are you sure you want to delete this record?")) {
-      this.records.splice(index, 1);
-      this.saveToStorage();
-      this.filteredRecords = [];
-      this.searchId = '';
-    }
   }
 }

@@ -21,7 +21,15 @@
         <h3>👤 STUDENT INFORMATION</h3>
 
         <p><b>ID:</b> {{ filteredRecords[0].studentId }}</p>
-        <p><b>Name:</b> {{ filteredRecords[0].name }}</p>
+
+        <!-- ✅ FIXED NAME DISPLAY -->
+        <p>
+          <b>Name:</b>
+          {{ filteredRecords[0].firstName }}
+          {{ filteredRecords[0].middleName }}
+          {{ filteredRecords[0].lastName }}
+        </p>
+
         <p><b>Course:</b> {{ filteredRecords[0].course }}</p>
         <p><b>Year:</b> {{ filteredRecords[0].year }}</p>
 
@@ -29,7 +37,6 @@
           + Add Another Transaction
         </button>
 
-        <!-- EDIT BUTTON MOVED HERE -->
         <button class="add-btn" style="margin-top:10px; background:#444;"
                 (click)="editRecord(filteredRecords[0], 0)">
           ✏️ Edit Student Info
@@ -94,7 +101,9 @@
             <tr>
               <th>#</th>
               <th>STUDENT ID</th>
-              <th>NAME</th>
+              <th>FIRST NAME</th>
+              <th>MIDDLE NAME</th>
+              <th>LAST NAME</th>
               <th>COURSE</th>
               <th>YEAR</th>
             </tr>
@@ -104,7 +113,9 @@
             <tr *ngFor="let r of records; let i = index">
               <td>{{ i + 1 }}</td>
               <td>{{ r.studentId }}</td>
-              <td>{{ r.name }}</td>
+              <td>{{ r.firstName }}</td>
+              <td>{{ r.middleName }}</td>
+              <td>{{ r.lastName }}</td>
               <td>{{ r.course }}</td>
               <td>{{ r.year }}</td>
             </tr>
@@ -117,7 +128,7 @@
         No results found.
       </div>
 
-      <!-- PAYMENT HISTORY (NO EDIT, ONLY DELETE) -->
+      <!-- PAYMENT HISTORY -->
       <div class="card">
         <h3>⏲ PAYMENT HISTORY</h3>
 
@@ -135,24 +146,24 @@
             </tr>
           </thead>
 
-          <tbody>
-            <tr *ngFor="let r of filteredRecords; let i = index">
+          <tbody *ngIf="filteredRecords.length">
+            <tr *ngFor="let t of filteredRecords[0].transactions; let i = index">
               <td>{{ i+1 }}</td>
-              <td>{{ r.date }}</td>
-              <td>{{ r.fee }}</td>
-              <td>{{ r.amount }}</td>
-              <td>{{ r.method }}</td>
+              <td>{{ t.date }}</td>
+              <td>{{ t.fee }}</td>
+              <td>{{ t.amount }}</td>
+              <td>{{ t.method }}</td>
               <td>
-                <span [ngClass]="r.status==='Paid'?'paid':'partial'">
-                  {{ r.status }}
+                <span [ngClass]="t.status==='Paid'?'paid':'partial'">
+                  {{ t.status }}
                 </span>
               </td>
               <td>
-                <a *ngIf="r.receipt" [href]="r.receipt" target="_blank">View</a>
-                <span *ngIf="!r.receipt">No File</span>
+                <a *ngIf="t.receipt" [href]="t.receipt" target="_blank">View</a>
+                <span *ngIf="!t.receipt">No File</span>
               </td>
               <td>
-                <button (click)="confirmDelete(i)">Delete</button>
+                <button (click)="deleteTransaction(i)">Delete</button>
               </td>
             </tr>
           </tbody>
@@ -161,7 +172,7 @@
 
     </div>
 
-    <!-- RIGHT FORMS -->
+    <!-- RIGHT FORMS (UNCHANGED) -->
     <div class="right card" *ngIf="showAddForm">
 
       <h3>Add Student</h3>
@@ -171,9 +182,17 @@
              maxlength="10"
              (input)="newRecord.studentId=newRecord.studentId.replace(/[^0-9]/g,'')">
 
-      <input placeholder="Name"
-             [(ngModel)]="newRecord.name"
-             (input)="newRecord.name=newRecord.name.replace(/[^A-Za-z\s]/g,'')">
+      <input placeholder="First Name"
+             [(ngModel)]="newRecord.firstName"
+             (input)="newRecord.firstName=newRecord.firstName.replace(/[^A-Za-z\s]/g,'')">
+
+      <input placeholder="Middle Name"
+             [(ngModel)]="newRecord.middleName"
+             (input)="newRecord.middleName=newRecord.middleName.replace(/[^A-Za-z\s]/g,'')">
+
+      <input placeholder="Last Name"
+             [(ngModel)]="newRecord.lastName"
+             (input)="newRecord.lastName=newRecord.lastName.replace(/[^A-Za-z\s]/g,'')">
 
       <label>Course</label>
       <select [(ngModel)]="newRecord.course">
@@ -222,35 +241,6 @@
       <button (click)="addRecord()">Save</button>
       <button class="cancel-btn" (click)="closeAddForm()">Cancel</button>
 
-    </div>
-
-    <!-- EDIT MODAL (NOW STUDENT INFO EDIT ONLY) -->
-    <div *ngIf="selectedRecord" class="edit-modal">
-      <div class="edit-box">
-
-        <h3>Edit Student Information</h3>
-
-        <input [(ngModel)]="selectedRecord.studentId" placeholder="Student ID">
-
-        <input [(ngModel)]="selectedRecord.name" placeholder="Name">
-
-        <select [(ngModel)]="selectedRecord.course">
-          <option>BSIT</option>
-          <option>BSTCM</option>
-          <option>BSEMT</option>
-        </select>
-
-        <select [(ngModel)]="selectedRecord.year">
-          <option>1st</option>
-          <option>2nd</option>
-          <option>3rd</option>
-          <option>4th</option>
-        </select>
-
-        <button (click)="saveEdit()">Save</button>
-        <button (click)="cancelEdit()">Cancel</button>
-
-      </div>
     </div>
 
   </div>
