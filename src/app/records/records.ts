@@ -38,19 +38,21 @@ export class Records implements OnInit {
     const data = localStorage.getItem('records');
     this.records = data ? JSON.parse(data) : [];
 
-    // 🔥 MIGRATE OLD DATA (name → first/middle/last)
-    this.records = this.records.map((r: any) => {
-      if (!r.firstName && r.name) {
-        const parts = r.name.split(' ');
-        return {
-          ...r,
-          firstName: parts[0] || '',
-          middleName: parts[1] || '',
-          lastName: parts.slice(2).join(' ') || ''
-        };
+    const uniqueMap = new Map();
+
+    this.records.forEach((r: any) => {
+      if (!uniqueMap.has(r.studentId)) {
+        uniqueMap.set(r.studentId, r);
+      } else {
+        const existing = uniqueMap.get(r.studentId);
+        existing.transactions = [
+          ...(existing.transactions || []),
+          ...(r.transactions || [])
+        ];
       }
-      return r;
     });
+
+    this.records = Array.from(uniqueMap.values());
 
     this.saveToStorage();
   }
@@ -126,22 +128,27 @@ export class Records implements OnInit {
   // SEARCH STUDENT
   // =========================
   searchStudent() {
-  const key = this.searchId.trim();
+    const key = this.searchId.trim();
 
-  if (!key) {
-    this.filteredRecords = [];
-    return;
+    if (!key) {
+      this.filteredRecords = [];
+      return;
+    }
+
+    this.filteredRecords = this.records.filter(r =>
+      r.studentId.includes(key)
+    );
   }
-
-  this.filteredRecords = this.records.filter(r =>
-    r.studentId.includes(key)
-  );
-}
 
   // =========================
   // ADD STUDENT
   // =========================
   addRecord() {
+
+    if (!this.newRecord.studentId?.trim()) {
+      alert("Student ID is required!");
+      return;
+    }
 
     if (!this.newRecord.firstName?.trim()) {
       alert("First Name is required!");
@@ -153,14 +160,40 @@ export class Records implements OnInit {
       return;
     }
 
-    if (!this.newRecord.studentId) {
-      alert("Student ID is required!");
+    if (!this.newRecord.course) {
+      alert("Course is required!");
       return;
     }
 
-    // 🔥 SAFE DUPLICATE CHECK (ONLY ID)
+    if (!this.newRecord.year) {
+      alert("Year is required!");
+      return;
+    }
+
+    if (!this.newRecord.fee) {
+      alert("Fee is required!");
+      return;
+    }
+
+    if (!this.newRecord.amount) {
+      alert("Amount is required!");
+      return;
+    }
+
+    if (!this.newRecord.method) {
+      alert("Payment Method is required!");
+      return;
+    }
+
+    if (!this.newRecord.date) {
+      alert("Date is required!");
+      return;
+    }
+
+    // ✅ FIXED DUPLICATE CHECK
     const existing = this.records.find(r =>
-      r.studentId === this.newRecord.studentId
+      String(r.studentId).trim().toLowerCase() ===
+      String(this.newRecord.studentId).trim().toLowerCase()
     );
 
     if (existing) {
@@ -195,6 +228,8 @@ export class Records implements OnInit {
 
     window.dispatchEvent(new Event('storage'));
 
+    alert("Student added successfully!");
+
     this.closeAddForm();
   }
 
@@ -205,6 +240,26 @@ export class Records implements OnInit {
     const student = this.filteredRecords[0];
     if (!student) return;
 
+    if (!this.newTransaction.fee) {
+      alert("Fee is required!");
+      return;
+    }
+
+    if (!this.newTransaction.amount) {
+      alert("Amount is required!");
+      return;
+    }
+
+    if (!this.newTransaction.method) {
+      alert("Payment Method is required!");
+      return;
+    }
+
+    if (!this.newTransaction.date) {
+      alert("Date is required!");
+      return;
+    }
+
     this.computeBalance(this.newTransaction);
 
     student.transactions.push({ ...this.newTransaction });
@@ -212,18 +267,10 @@ export class Records implements OnInit {
     this.saveToStorage();
     window.dispatchEvent(new Event('storage'));
 
+    alert("Transaction added successfully!");
+
     this.closeTransactionForm();
     this.searchStudent();
-  }
-
-  deleteTransaction(index: number) {
-    const student = this.filteredRecords[0];
-    if (!student || !student.transactions) return;
-
-    student.transactions.splice(index, 1);
-
-    this.saveToStorage();
-    window.dispatchEvent(new Event('storage'));
   }
 
   // =========================
@@ -232,6 +279,7 @@ export class Records implements OnInit {
   openAddForm() {
     this.showAddForm = true;
     this.showTransactionForm = false;
+    this.selectedRecord = null; // 🔥 ensure edit closes
   }
 
   closeAddForm() {
@@ -247,6 +295,7 @@ export class Records implements OnInit {
 
     this.showTransactionForm = true;
     this.showAddForm = false;
+    this.selectedRecord = null; // 🔥 ensure edit closes
     this.newTransaction = this.getEmptyTransaction();
   }
 
@@ -256,23 +305,112 @@ export class Records implements OnInit {
   }
 
   // =========================
-  // EDIT
+  // EDIT (FIXED)
   // =========================
-  editRecord(record: any, index: number) {
+  editRecord(record: any) {
     this.selectedRecord = { ...record };
-    this.selectedIndex = index;
+
+    this.selectedIndex = this.records.findIndex(r =>
+      r.studentId === record.studentId
+    );
+
+    this.showAddForm = false;
+    this.showTransactionForm = false;
   }
 
   saveEdit() {
-    this.records[this.selectedIndex] = this.selectedRecord;
 
-    this.saveToStorage();
-    window.dispatchEvent(new Event('storage'));
+    // 🔥 prevent duplicate ID during edit
+    const duplicate = this.records.find((r, i) =>
+      i !== this.selectedIndex &&
+      r.studentId === this.selectedRecord.studentId
+    );
 
-    this.selectedRecord = null;
+    if (duplicate) {
+      alert("Another student with this ID already exists!");
+      return;
+    }
+
+    if (this.selectedIndex > -1) {
+      this.records[this.selectedIndex] = {
+        ...this.records[this.selectedIndex],
+        ...this.selectedRecord
+      };
+
+      this.saveToStorage();
+      window.dispatchEvent(new Event('storage'));
+
+      alert("Student updated successfully!");
+
+      this.selectedRecord = null;
+
+      this.searchStudent(); // 🔥 refresh UI
+    }
   }
 
   cancelEdit() {
     this.selectedRecord = null;
   }
+
+  // =========================
+  // HELPERS
+  // =========================
+  getUniqueStudents() {
+    const map = new Map();
+
+    this.records.forEach(r => {
+      if (!map.has(r.studentId)) {
+        map.set(r.studentId, r);
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  getRemainingBalances(student: any) {
+    if (!student || !student.transactions) return [];
+
+    const feeTotals: any = {};
+
+    student.transactions.forEach((t: any) => {
+      const feeAmount = this.feeMap[t.fee] || 0;
+
+      if (!feeTotals[t.fee]) {
+        feeTotals[t.fee] = {
+          fee: t.fee,
+          totalFee: feeAmount,
+          paid: 0
+        };
+      }
+
+      feeTotals[t.fee].paid += Number(t.amount || 0);
+    });
+
+    return Object.values(feeTotals)
+      .map((f: any) => ({
+        fee: f.fee,
+        balance: f.totalFee - f.paid
+      }))
+      .filter((f: any) => f.balance > 0);
+  }
+  // =========================
+// DELETE TRANSACTION
+// =========================
+deleteTransaction(index: number) {
+
+  const student = this.filteredRecords[0];
+  if (!student) return;
+
+  const confirmDelete = confirm("Are you sure you want to delete this transaction?");
+  if (!confirmDelete) return;
+
+  student.transactions.splice(index, 1);
+
+  this.saveToStorage();
+  window.dispatchEvent(new Event('storage'));
+
+  alert("Transaction deleted successfully!");
+
+  this.searchStudent(); // refresh UI
+}
 }
